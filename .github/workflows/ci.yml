@@ -13,29 +13,16 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: gp-trader   # <— run all commands from this folder
+        working-directory: gp-trader   # <— key line
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-
-      - uses: actions/cache@v4
-        with:
-          path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('gp-trader/pyproject.toml') }}
-
       - name: Install + Lint + Type + Test
-        shell: bash
         run: |
-          set -euxo pipefail
-          python -m pip install -U pip
-          python -m pip install -e .[dev]
+          python -m venv .venv
+          source .venv/bin/activate
+          pip install -U pip
+          pip install -e .[dev]
           make all
-
-      - name: Upload coverage
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: coverage
-          path: gp-trader/.coverage
