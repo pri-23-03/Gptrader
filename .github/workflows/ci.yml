@@ -1,22 +1,45 @@
 # .github/workflows/ci.yml
+name: CI
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
 jobs:
   test:
     runs-on: ubuntu-latest
-    defaults: { run: { working-directory: gp-trader } }
+    defaults:
+      run:
+        working-directory: gp-trader   # project lives here
+        shell: bash
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
       - uses: actions/setup-python@v5
-        with: { python-version: '3.11' }
+        with:
+          python-version: '3.11'
+
       - name: Cache pip
         uses: actions/cache@v4
         with:
           path: ~/.cache/pip
           key: ${{ runner.os }}-pip-${{ hashFiles('gp-trader/pyproject.toml') }}
-          restore-keys: ${{ runner.os }}-pip-
-      - name: Install + Lint + Type + Test
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      - name: Install (dev)
         run: |
           python -m venv .venv
           source .venv/bin/activate
           pip install -U pip
           pip install -e .[dev]
+
+      - name: Lint + Type + Test
+        run: |
+          source .venv/bin/activate
           make all
