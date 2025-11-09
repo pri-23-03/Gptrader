@@ -214,5 +214,26 @@ class _TyperClickAdapter:
 # Export an object that works for both Typer and Click
 app: Any = _TyperClickAdapter(typer_app)
 
+
+@app.command("diag")
+def diag() -> None:
+    """Print selected backends and key settings."""
+    # delay imports so we don't touch top import block
+    from gptrader.adapters.factory import make_bus, make_executor, make_index
+    from gptrader.config import settings
+
+    b = make_bus().__class__.__name__
+    i = make_index().__class__.__name__
+    e = make_executor().__class__.__name__
+    typer.echo("Backends:")
+    typer.echo(f"  BUS_BACKEND={settings.bus_backend} -> {b}")
+    typer.echo(f"  INDEX_BACKEND={settings.index_backend} -> {i}")
+    typer.echo(f"  EXEC_BACKEND={settings.exec_backend} -> {e}")
+
+
+if __name__ == "__main__":
+    app()
+
+
 if __name__ == "__main__":
     app()
