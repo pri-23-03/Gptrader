@@ -1,10 +1,10 @@
-{"v": 1, "topic": "news.v1", "symbol": "AAPL", "ts": "2025-11-09T00:40:03.880037+00:00", "headline": "Apple raises guidance after strong demand", "url": null, "sentiment_hint": null, "partition_key": "AAPL"}
-{"v": 1, "topic": "news.v1", "symbol": "MSFT", "ts": "2025-11-09T00:40:03.880037+00:00", "headline": "Apple raises guidance after strong demand", "url": null, "sentiment_hint": null, "partition_key": "MSFT"}
-{"v": 1, "topic": "news.v1", "symbol": "AAPL", "ts": "2025-11-09T00:41:03.880037+00:00", "headline": "Microsoft beats earnings expectations", "url": null, "sentiment_hint": null, "partition_key": "AAPL"}
-{"v": 1, "topic": "news.v1", "symbol": "MSFT", "ts": "2025-11-09T00:41:03.880037+00:00", "headline": "Microsoft beats earnings expectations", "url": null, "sentiment_hint": null, "partition_key": "MSFT"}
-{"v": 1, "topic": "news.v1", "symbol": "AAPL", "ts": "2025-11-09T00:42:03.880037+00:00", "headline": "Apple product surge delights consumers", "url": null, "sentiment_hint": null, "partition_key": "AAPL"}
-{"v": 1, "topic": "news.v1", "symbol": "MSFT", "ts": "2025-11-09T00:42:03.880037+00:00", "headline": "Apple product surge delights consumers", "url": null, "sentiment_hint": null, "partition_key": "MSFT"}
-{"v": 1, "topic": "news.v1", "symbol": "AAPL", "ts": "2025-11-09T00:43:03.880037+00:00", "headline": "Microsoft faces downgrade concerns", "url": null, "sentiment_hint": null, "partition_key": "AAPL"}
-{"v": 1, "topic": "news.v1", "symbol": "MSFT", "ts": "2025-11-09T00:43:03.880037+00:00", "headline": "Microsoft faces downgrade concerns", "url": null, "sentiment_hint": null, "partition_key": "MSFT"}
-{"v": 1, "topic": "news.v1", "symbol": "AAPL", "ts": "2025-11-09T00:44:03.880037+00:00", "headline": "Neutral industry outlook persists", "url": null, "sentiment_hint": null, "partition_key": "AAPL"}
-{"v": 1, "topic": "news.v1", "symbol": "MSFT", "ts": "2025-11-09T00:44:03.880037+00:00", "headline": "Neutral industry outlook persists", "url": null, "sentiment_hint": null, "partition_key": "MSFT"}
+{"v": 1, "topic": "news.v1", "symbol": "AAPL", "ts": "2025-11-09T00:57:38.206750+00:00", "headline": "Apple raises guidance after strong demand", "url": null, "sentiment_hint": null, "partition_key": "AAPL"}
+{"v": 1, "topic": "news.v1", "symbol": "MSFT", "ts": "2025-11-09T00:57:38.206750+00:00", "headline": "Apple raises guidance after strong demand", "url": null, "sentiment_hint": null, "partition_key": "MSFT"}
+{"v": 1, "topic": "news.v1", "symbol": "AAPL", "ts": "2025-11-09T00:58:38.206750+00:00", "headline": "Microsoft beats earnings expectations", "url": null, "sentiment_hint": null, "partition_key": "AAPL"}
+{"v": 1, "topic": "news.v1", "symbol": "MSFT", "ts": "2025-11-09T00:58:38.206750+00:00", "headline": "Microsoft beats earnings expectations", "url": null, "sentiment_hint": null, "partition_key": "MSFT"}
+{"v": 1, "topic": "news.v1", "symbol": "AAPL", "ts": "2025-11-09T00:59:38.206750+00:00", "headline": "Apple product surge delights consumers", "url": null, "sentiment_hint": null, "partition_key": "AAPL"}
+{"v": 1, "topic": "news.v1", "symbol": "MSFT", "ts": "2025-11-09T00:59:38.206750+00:00", "headline": "Apple product surge delights consumers", "url": null, "sentiment_hint": null, "partition_key": "MSFT"}
+{"v": 1, "topic": "news.v1", "symbol": "AAPL", "ts": "2025-11-09T01:00:38.206750+00:00", "headline": "Microsoft faces downgrade concerns", "url": null, "sentiment_hint": null, "partition_key": "AAPL"}
+{"v": 1, "topic": "news.v1", "symbol": "MSFT", "ts": "2025-11-09T01:00:38.206750+00:00", "headline": "Microsoft faces downgrade concerns", "url": null, "sentiment_hint": null, "partition_key": "MSFT"}
+{"v": 1, "topic": "news.v1", "symbol": "AAPL", "ts": "2025-11-09T01:01:38.206750+00:00", "headline": "Neutral industry outlook persists", "url": null, "sentiment_hint": null, "partition_key": "AAPL"}
+{"v": 1, "topic": "news.v1", "symbol": "MSFT", "ts": "2025-11-09T01:01:38.206750+00:00", "headline": "Neutral industry outlook persists", "url": null, "sentiment_hint": null, "partition_key": "MSFT"}
