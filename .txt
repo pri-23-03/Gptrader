@@ -1,0 +1,822 @@
+# === GPTrader Phase-1: one-shot repair (safe overwrite) ===
+bash -euo pipefail <<'FIX'
+cd gp-trader
+
+# Makefile (with real tabs)
+cat > Makefile <<'MK'
+.PHONY: venv install fmt lint type test all run clean
+
+venv:
+\tpython3 -m venv .venv
+
+install:
+\t. .venv/bin/activate && pip install -U pip && pip install -e . && pip install pytest pytest-cov black isort ruff mypy
+
+fmt:
+\t. .venv/bin/activate && black src tests && isort src tests
+
+lint:
+\t. .venv/bin/activate && ruff check src tests
+
+type:
+\t. .venv/bin/activate && mypy src
+
+test:
+\t. .venv/bin/activate && pytest
+
+all: fmt lint type test
+
+run:
+\t. .venv/bin/activate && python -m gptrader.cli --help
+
+clean:
+\trm -rf .venv .pytest_cache .mypy_cache .ruff_cache artifacts/*.tmp
+MK
+
+# pyproject: add setuptools package discovery so -e . works
+cat > pyproject.toml <<'PY'
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "gptrader"
+version = "0.1.0"
+requires-python = ">=3.11"
+dependencies = [
+  "typer[all]>=0.12",
+  "pydantic>=2",
+  "duckdb>=1.1.0",
+  "pandas>=2.2",
+  "numpy>=1.26",
+  "rich>=13.7",
+]
+
+[tool.setuptools.packages.find]
+where = ["src","packages"]
+
+[tool.black]
+line-length = 100
+
+[tool.isort]
+profile = "black"
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+select = ["E","F","W","I","B","UP"]
+
+[tool.pytest.ini_options]
+addopts = "-q --disable-warnings --maxfail=1 --cov=gptrader --cov-report=term-missing"
+pythonpath = ["src"]
+
+[tool.mypy]
+python_version = "3.11"
+ignore_missing_imports = true
+strict_optional = true
+warn_unused_ignores = true
+warn_redundant_casts = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+PY
+
+# README (close code block, ASCII only)
+cat > README.md <<'MD'
+# GPTrader (Phase 1 — Local Emulation)
+
+**Quickstart (≤5 commands):**
+```bash
+python3 -m venv .venv && source .venv/bin/activate
+pip install -U pip && pip install -e . && pip install pytest pytest-cov black isort ruff mypy
+make all   # lint/type/test
+python -m gptrader.cli ingest-sample --seed 42 --bars 200
+python -m gptrader.cli build-index
+python -m gptrader.cli run-backtest --seed 42 --bars 200 --run-id demo
+
+Artifacts: artifacts/run-<run_id>/ with pnl.csv, summary.json, metrics.csv, logs.jsonl.
+MD
+
+Schemas (packages discoverable)
+
+mkdir -p packages/schemas
+cat > packages/schemas/init.py <<'PY'
+
+Versioned schemas for events/tools
+
+from .events import QuoteV1, NewsV1, OrderV1, FillV1
+PY
+
+cat > packages/schemas/events.py <<'PY'
+from pydantic import BaseModel, Field
+from typing import Literal, Optional
+
+class QuoteV1(BaseModel):
+v: Literal[1] = 1
+topic: Literal["quotes.v1"] = "quotes.v1"
+symbol: str
+ts: str  # ISO8601
+price: float
+volume: int
+source: str = "synthetic"
+partition_key: str = Field(default_factory=str)
+
+class NewsV1(BaseModel):
+v: Literal[1] = 1
+topic: Literal["news.v1"] = "news.v1"
+symbol: str
+ts: str
+headline: str
+url: str | None = None
+sentiment_hint: Optional[Literal["pos","neg","neu"]] = None
+partition_key: str = Field(default_factory=str)
+
+class OrderV1(BaseModel):
+v: Literal[1] = 1
+topic: Literal["orders.v1"] = "orders.v1"
+run_id: str
+ts: str
+symbol: str
+side: Literal["buy","sell"]
+qty: float
+type: Literal["market","limit"] = "market"
+limit_price: float | None = None
+dry_run: bool = True
+
+class FillV1(BaseModel):
+v: Literal[1] = 1
+topic: Literal["fills.v1"] = "fills.v1"
+run_id: str
+ts: str
+order_id: str
+symbol: str
+side: Literal["buy","sell"]
+qty: float
+price: float
+PY
+
+Package init and folders
+
+mkdir -p src/gptrader/{agents,tools,core,io,index,backtest}
+touch src/gptrader/init.py
+
+Event bus
+
+cat > src/gptrader/core/eventbus.py <<'PY'
+from future import annotations
+import hashlib, json, threading
+from dataclasses import dataclass
+from pathlib import Path
+from typing import Any, Dict, Iterator, List, Optional
+
+@dataclass
+class Envelope:
+topic: str
+partition: int
+offset: int
+payload: Dict[str, Any]
+
+class LocalBus:
+"""
+Local journaled bus with topic/partition semantics and consumer offsets.
+Journal layout:
+data/journal//partition-.ndjson
+.runtime/offsets//-.json ({"offset": int})
+"""
+def init(self, base: Path, partitions: int = 4):
+self.base = base
+self.partitions = partitions
+self.lock = threading.Lock()
+(self.base / "data/journal").mkdir(parents=True, exist_ok=True)
+(self.base / ".runtime/offsets").mkdir(parents=True, exist_ok=True)
+
+def _topic_dir(self, topic: str) -> Path:
+    d = self.base / "data/journal" / topic
+    d.mkdir(parents=True, exist_ok=True)
+    return d
+
+def _offset_file(self, group: str, topic: str, partition: int) -> Path:
+    d = self.base / ".runtime/offsets" / group
+    d.mkdir(parents=True, exist_ok=True)
+    return d / f"{topic}-{partition}.json"
+
+def _choose_partition(self, key: str) -> int:
+    h = hashlib.sha256(key.encode()).digest()
+    return int.from_bytes(h[:2], "big") % self.partitions
+
+def publish(self, topic: str, key: str, payload: Dict[str, Any]) -> Envelope:
+    p = self._choose_partition(key)
+    f = self._topic_dir(topic) / f"partition-{p}.ndjson"
+    with self.lock:
+        f.touch(exist_ok=True)
+        offset = sum(1 for _ in open(f, "r"))
+        with open(f, "a") as w:
+            w.write(json.dumps(payload) + "\n")
+    return Envelope(topic, p, offset, payload)
+
+def subscribe(self, group: str, topic: str, partitions: Optional[List[int]] = None) -> Iterator[Envelope]:
+    parts = partitions if partitions else list(range(self.partitions))
+    files = [(p, self._topic_dir(topic) / f"partition-{p}.ndjson") for p in parts]
+    offsets: Dict[int, int] = {}
+    for p,_ in files:
+        off_file = self._offset_file(group, topic, p)
+        if off_file.exists():
+            offsets[p] = json.loads(off_file.read_text()).get("offset", 0)
+        else:
+            offsets[p] = 0
+    for p, f in files:
+        if not f.exists(): continue
+        with open(f, "r") as r:
+            for i, line in enumerate(r):
+                if i < offsets[p]: continue
+                payload = json.loads(line)
+                yield Envelope(topic=topic, partition=p, offset=i, payload=payload)
+
+def commit(self, group: str, env: Envelope) -> None:
+    off_file = self._offset_file(group, env.topic, env.partition)
+    off_file.write_text(json.dumps({"offset": env.offset + 1}))
+
+def reset(self, group: str, topic: str, partition: Optional[int] = None) -> None:
+    if partition is None:
+        for p in range(self.partitions):
+            self._offset_file(group, topic, p).unlink(missing_ok=True)
+    else:
+        self._offset_file(group, topic, partition).unlink(missing_ok=True)
+
+PY
+
+IO
+
+cat > src/gptrader/io/storage.py <<'PY'
+from future import annotations
+from pathlib import Path
+import json, duckdb, pandas as pd
+
+def materialize_ndjson_to_parquet(ndjson_path: Path, parquet_path: Path) -> None:
+rows = [json.loads(line) for line in ndjson_path.read_text().splitlines() if line.strip()]
+if not rows: return
+df = pd.DataFrame(rows)
+parquet_path.parent.mkdir(parents=True, exist_ok=True)
+df.to_parquet(parquet_path, index=False)
+
+def duckdb_query(parquet_path: Path, sql: str) -> pd.DataFrame:
+con = duckdb.connect()
+con.execute(f"CREATE OR REPLACE VIEW v AS SELECT * FROM read_parquet('{parquet_path.as_posix()}')")
+return con.execute(sql).df()
+PY
+
+Vector store
+
+cat > src/gptrader/index/vectorstore.py <<'PY'
+from future import annotations
+import math, json, re
+from dataclasses import dataclass
+from pathlib import Path
+from typing import List, Tuple, Dict
+
+TOKEN_RE = re.compile(r"[A-Za-z0-9_]+")
+
+def embed(text: str, dim: int = 256) -> List[float]:
+v = [0.0]dim
+for tok in TOKEN_RE.findall(text.lower()):
+h = hash(tok) % dim
+v[h] += 1.0
+norm = math.sqrt(sum(xx for x in v)) or 1.0
+return [x/norm for x in v]
+
+def cosine(a: List[float], b: List[float]) -> float:
+return sum(x*y for x,y in zip(a,b))
+
+def keyword_score(text: str, query: str) -> float:
+t = set(TOKEN_RE.findall(text.lower()))
+q = set(TOKEN_RE.findall(query.lower()))
+if not t or not q: return 0.0
+inter = len(t & q)
+return inter / len(q)
+
+@dataclass
+class Doc:
+id: str
+text: str
+meta: Dict
+
+class LocalHybridIndex:
+def init(self, base: Path):
+self.base = base
+self.meta_path = base / "meta.jsonl"
+self.vec_path = base / "vecs.jsonl"
+self.base.mkdir(parents=True, exist_ok=True)
+self.docs: List[Doc] = []
+self.vecs: List[List[float]] = []
+
+def add(self, doc: Doc):
+    self.docs.append(doc)
+    self.vecs.append(embed(doc.text))
+
+def persist(self):
+    with open(self.meta_path, "w") as m, open(self.vec_path, "w") as v:
+        for d, e in zip(self.docs, self.vecs):
+            m.write(json.dumps({"id": d.id, "text": d.text, "meta": d.meta})+"\n")
+            v.write(json.dumps(e)+"\n")
+
+def load(self):
+    self.docs, self.vecs = [], []
+    if not self.meta_path.exists(): return
+    with open(self.meta_path) as m, open(self.vec_path) as v:
+        for lm, lv in zip(m, v):
+            dm = json.loads(lm); ve = json.loads(lv)
+            self.docs.append(Doc(dm["id"], dm["text"], dm["meta"]))
+            self.vecs.append(ve)
+
+def search(self, query: str, k: int = 5, alpha: float = 0.7) -> List[Tuple[Doc, float]]:
+    qv = embed(query)
+    scored = []
+    for d, e in zip(self.docs, self.vecs):
+        s_vec = cosine(qv, e)
+        s_kw = keyword_score(d.text, query)
+        s = alpha*s_vec + (1-alpha)*s_kw
+        scored.append((d, s))
+    scored.sort(key=lambda x: x[1], reverse=True)
+    return scored[:k]
+
+PY
+
+Tools
+
+cat > src/gptrader/tools/registry.py <<'PY'
+from future import annotations
+from typing import Protocol, Any, Dict
+
+class Tool(Protocol):
+name: str
+def call(self, **kwargs) -> Any: …
+
+class ToolRegistry:
+def init(self):
+self._tools: Dict[str, Tool] = {}
+def register(self, tool: Tool):
+self._tools[tool.name] = tool
+def get(self, name: str) -> Tool:
+return self._tools[name]
+PY
+
+cat > src/gptrader/tools/marketdata.py <<'PY'
+from future import annotations
+from typing import Any, List, Dict
+from pathlib import Path
+import json
+
+class MarketDataTool:
+name = "marketdata.getBars"
+def init(self, journal_dir: Path):
+self.journal_dir = journal_dir
+def call(self, symbol: str, lookback: int = 20) -> List[Dict[str, Any]]:
+f = self.journal_dir / "quotes.v1" / "partition-0.ndjson"
+rows = [json.loads(l) for l in f.read_text().splitlines() if json.loads(l)["symbol"] == symbol]
+return rows[-lookback:]
+PY
+
+cat > src/gptrader/tools/portfolio.py <<'PY'
+from future import annotations
+from typing import Any, Dict
+
+class PortfolioStateTool:
+name = "portfolio.getState"
+def init(self, state: Dict[str, Any]): self.state = state
+def call(self) -> Dict[str, Any]: return self.state
+PY
+
+cat > src/gptrader/tools/execution.py <<'PY'
+from future import annotations
+import uuid
+from typing import Any, Dict, Literal
+
+class ExecutionTool:
+name = "execution.placeOrder"
+def init(self, oms): self.oms = oms
+def call(self, symbol: str, side: Literal["buy","sell"], qty: float, type: str = "market", limit_price: float | None = None, dry_run: bool = True) -> Dict[str, Any]:
+order_id = str(uuid.uuid4())
+return self.oms.place_order(order_id=order_id, symbol=symbol, side=side, qty=qty, type=type, limit_price=limit_price, dry_run=dry_run)
+PY
+
+cat > src/gptrader/tools/backtest.py <<'PY'
+from future import annotations
+from typing import Any, Dict
+
+class BacktestTool:
+name = "backtest.getConfig"
+def init(self, cfg: Dict[str, Any]): self.cfg = cfg
+def call(self) -> Dict[str, Any]: return self.cfg
+PY
+
+cat > src/gptrader/tools/search_news.py <<'PY'
+from future import annotations
+from typing import Any, Dict, List
+from ..index.vectorstore import LocalHybridIndex
+
+class SearchNewsTool:
+name = "search.news"
+def init(self, idx: LocalHybridIndex): self.idx = idx
+def call(self, query: str, k: int = 5) -> List[Dict[str, Any]]:
+res = self.idx.search(query, k=k)
+return [{"id": d.id, "text": d.text, "meta": d.meta, "score": float(s)} for d,s in res]
+PY
+
+OMS
+
+cat > src/gptrader/core/oms.py <<'PY'
+from future import annotations
+from dataclasses import dataclass, field
+from typing import Dict, List, Literal
+from datetime import datetime, timezone
+
+@dataclass
+class Position:
+qty: float = 0.0
+avg_price: float = 0.0
+
+@dataclass
+class OMS:
+dry_run: bool = True
+max_notional: float = 10000.0
+positions: Dict[str, Position] = field(default_factory=dict)
+orders: List[dict] = field(default_factory=list)
+fills: List[dict] = field(default_factory=list)
+
+def place_order(self, order_id: str, symbol: str, side: Literal["buy","sell"], qty: float, type: str, limit_price: float | None, dry_run: bool = True):
+    px = limit_price if (type == "limit" and limit_price) else 100.0
+    notional = abs(qty*px)
+    if notional > self.max_notional:
+        return {"order_id": order_id, "status": "rejected", "reason": "max_notional"}
+
+    now = datetime.now(timezone.utc).isoformat()
+    order = {"id": order_id, "symbol": symbol, "side": side, "qty": qty, "type": type, "limit_price": limit_price, "ts": now, "dry_run": dry_run}
+    self.orders.append(order)
+
+    if dry_run:
+        fill_px = px
+        self.fills.append({"order_id": order_id, "symbol": symbol, "side": side, "qty": qty, "price": fill_px, "ts": now})
+        pos = self.positions.get(symbol, Position())
+        signed_qty = qty if side == "buy" else -qty
+        new_qty = pos.qty + signed_qty
+        if (pos.qty >= 0 and signed_qty >=0) or (pos.qty <= 0 and signed_qty <= 0):
+            new_avg = (pos.avg_price*abs(pos.qty) + fill_px*abs(signed_qty)) / (abs(new_qty) or 1)
+        else:
+            new_avg = pos.avg_price if abs(signed_qty) <= abs(pos.qty) else fill_px
+        self.positions[symbol] = Position(qty=new_qty, avg_price=new_avg)
+        return {"order_id": order_id, "status": "filled", "price": fill_px, "ts": now}
+    else:
+        return {"order_id": order_id, "status": "accepted", "ts": now}
+
+PY
+
+Agents
+
+cat > src/gptrader/agents/news_agent.py <<'PY'
+from future import annotations
+from typing import Dict, Any
+
+POS = {"beat","raises","surge","upgrade","positive"}
+NEG = {"miss","cuts","downgrade","plunge","negative"}
+
+def analyze_news(headline: str) -> str:
+h = headline.lower()
+if any(w in h for w in POS): return "pos"
+if any(w in h for w in NEG): return "neg"
+return "neu"
+
+class NewsAgent:
+def init(self, tools): self.tools = tools
+def step(self, symbol: str) -> Dict[str, Any]:
+items = self.tools.get("search.news").call(query=symbol, k=5)
+score = 0
+for it in items:
+s = analyze_news(it["text"])
+score += 1 if s=="pos" else -1 if s=="neg" else 0
+return {"symbol": symbol, "sentiment": score}
+PY
+
+cat > src/gptrader/agents/tech_agent.py <<'PY'
+from future import annotations
+from typing import Dict, Any
+
+def sma(vals, n):
+if len(vals) < n: return None
+return sum(vals[-n:]) / n
+
+class TechAgent:
+def init(self, tools): self.tools = tools
+def step(self, symbol: str) -> Dict[str, Any]:
+bars = self.tools.get("marketdata.getBars").call(symbol=symbol, lookback=20)
+closes = [b["price"] for b in bars]
+s5 = sma(closes, 5)
+s20 = sma(closes, 20)
+return {"symbol": symbol, "sma5": s5, "sma20": s20, "last": closes[-1] if closes else None}
+PY
+
+cat > src/gptrader/agents/strategy_agent.py <<'PY'
+from future import annotations
+from typing import Dict, Any
+
+class StrategyAgent:
+"""
+Simple strategy: SMA5 cross + news tilt.
+Buy if sma5 > sma20 OR (sma nearly equal and news positive).
+Sell if sma5 < sma20 OR (sma nearly equal and news negative).
+"""
+def init(self, tools, epsilon: float = 0.2, qty: float = 1):
+self.tools = tools; self.epsilon = epsilon; self.qty = qty
+def step(self, symbol: str, signals: Dict[str, Any]) -> Dict[str, Any]:
+s5, s20 = signals["tech"]["sma5"], signals["tech"]["sma20"]
+news = signals["news"]["sentiment"]
+side = None
+if s5 is None or s20 is None: return {"action": "hold"}
+if s5 - s20 > self.epsilon or (abs(s5 - s20) <= self.epsilon and news > 0):
+side = "buy"
+elif s20 - s5 > self.epsilon or (abs(s5 - s20) <= self.epsilon and news < 0):
+side = "sell"
+if side:
+return {"action":"order","order":{"symbol":symbol,"side":side,"qty":self.qty}}
+return {"action":"hold"}
+PY
+
+cat > src/gptrader/agents/risk_agent.py <<'PY'
+from future import annotations
+from typing import Dict, Any
+
+class RiskAgent:
+def init(self, max_qty: float = 10, max_notional: float = 10000.0):
+self.max_qty = max_qty; self.max_notional = max_notional
+def step(self, symbol: str, proposal: Dict[str, Any], last_price: float) -> Dict[str, Any]:
+if proposal.get("action") != "order": return {"approved": True}
+o = proposal["order"]
+if abs(o["qty"]) > self.max_qty:
+return {"approved": False, "reason": "max_qty"}
+if abs(o["qty"] * last_price) > self.max_notional:
+return {"approved": False, "reason": "max_notional"}
+return {"approved": True}
+PY
+
+cat > src/gptrader/agents/pm_agent.py <<'PY'
+from future import annotations
+from typing import Dict, Any
+
+class PortfolioManagerAgent:
+def init(self, tools): self.tools = tools
+def step(self, symbol: str, approved: Dict[str, Any], proposal: Dict[str, Any]) -> Dict[str, Any]:
+if not approved.get("approved"): return {"status":"veto", "reason": approved.get("reason")}
+if proposal.get("action") != "order": return {"status":"idle"}
+o = proposal["order"]
+exec_res = self.tools.get("execution.placeOrder").call(symbol=o["symbol"], side=o["side"], qty=o["qty"], dry_run=True)
+return {"status":"sent", "exec": exec_res}
+PY
+
+Backtest runner
+
+cat > src/gptrader/backtest/runner.py <<'PY'
+from future import annotations
+import json
+from dataclasses import dataclass
+from pathlib import Path
+from typing import Dict, Any
+from ..core.eventbus import LocalBus
+from ..core.oms import OMS
+from ..tools.registry import ToolRegistry
+from ..tools.marketdata import MarketDataTool
+from ..tools.portfolio import PortfolioStateTool
+from ..tools.execution import ExecutionTool
+from ..tools.search_news import SearchNewsTool
+from ..index.vectorstore import LocalHybridIndex
+
+@dataclass
+class RunConfig:
+run_id: str
+seed: int
+bars: int
+symbol: str = "AAPL"
+
+class BacktestRunner:
+def init(self, base: Path, cfg: RunConfig):
+self.base = base
+self.cfg = cfg
+self.art_dir = base / f"artifacts/run-{cfg.run_id}"
+self.art_dir.mkdir(parents=True, exist_ok=True)
+self.bus = LocalBus(base, partitions=4)
+self.oms = OMS(dry_run=True, max_notional=10000.0)
+
+    self.registry = ToolRegistry()
+    self.registry.register(MarketDataTool(base / "data/journal"))
+    self.registry.register(ExecutionTool(self.oms))
+    self.portfolio_state = {"positions": self.oms.positions}
+    self.registry.register(PortfolioStateTool(self.portfolio_state))
+
+    idx_dir = base / "data/indices/news"
+    self.idx = LocalHybridIndex(idx_dir); self.idx.load()
+    self.registry.register(SearchNewsTool(self.idx))
+
+    self.logs = open(self.art_dir / "logs.jsonl", "w")
+    self.metrics = open(self.art_dir / "metrics.csv", "w")
+    self.metrics.write("ts,metric,value\n")
+
+    from ..agents.news_agent import NewsAgent
+    from ..agents.tech_agent import TechAgent
+    from ..agents.strategy_agent import StrategyAgent
+    from ..agents.risk_agent import RiskAgent
+    from ..agents.pm_agent import PortfolioManagerAgent
+
+    self.news = NewsAgent(self.registry)
+    self.tech = TechAgent(self.registry)
+    self.strategy = StrategyAgent(self.registry, epsilon=0.2, qty=1)
+    self.risk = RiskAgent(max_qty=10, max_notional=self.oms.max_notional)
+    self.pm = PortfolioManagerAgent(self.registry)
+
+def log(self, **kw):
+    kw["run_id"] = self.cfg.run_id
+    self.logs.write(json.dumps(kw) + "\n")
+
+def close(self):
+    self.logs.close(); self.metrics.close()
+
+def run(self) -> Dict[str, Any]:
+    symbol = self.cfg.symbol
+    group = f"bt-{self.cfg.run_id}"
+    self.bus.reset(group, "quotes.v1")
+    last_px = None
+    orders = 0
+
+    for env in self.bus.subscribe(group=group, topic="quotes.v1"):
+        q = env.payload
+        if q["symbol"] != symbol:
+            self.bus.commit(group, env)
+            continue
+        last_px = q["price"]
+        news_sig = self.news.step(symbol)
+        tech_sig = self.tech.step(symbol)
+        sigs = {"news": news_sig, "tech": tech_sig}
+        prop = self.strategy.step(symbol, sigs)
+        approved = self.risk.step(symbol, prop, last_price=last_px)
+        res = self.pm.step(symbol, approved, prop)
+        if res.get("status") == "sent": orders += 1
+        self.metrics.write(f"{q['ts']},last_price,{last_px}\n")
+        self.log(event="tick", symbol=symbol, last=last_px, prop=prop, approved=approved, res=res)
+        self.bus.commit(group, env)
+
+    pnl = []
+    pos = self.oms.positions.get(symbol)
+    if pos:
+        pos_qty = pos.qty
+        avg = pos.avg_price
+    else:
+        pos_qty = 0.0
+        avg = 0.0
+    for env in self.bus.subscribe(group=group, topic="quotes.v1"):
+        q = env.payload
+        if q["symbol"] != symbol: continue
+        px = q["price"]
+        mtm = pos_qty * (px - avg)
+        pnl.append((q["ts"], mtm))
+    with open(self.art_dir / "pnl.csv", "w") as w:
+        w.write("ts,eq\n")
+        for ts, v in pnl: w.write(f"{ts},{v}\n")
+    summary = {
+        "run_id": self.cfg.run_id,
+        "orders": orders,
+        "positions": {k: {"qty": v.qty, "avg": v.avg_price} for k, v in self.oms.positions.items()},
+    }
+    (self.art_dir / "summary.json").write_text(json.dumps(summary, indent=2))
+    return summary
+
+PY
+
+CLI
+
+cat > src/gptrader/cli.py <<'PY'
+from future import annotations
+import json, random
+from datetime import datetime, timedelta, timezone
+from pathlib import Path
+from typing import List
+import typer
+
+from packages.schemas.events import QuoteV1, NewsV1
+from gptrader.core.eventbus import LocalBus
+from gptrader.index.vectorstore import LocalHybridIndex, Doc
+from gptrader.backtest.runner import BacktestRunner, RunConfig
+from gptrader.io.storage import materialize_ndjson_to_parquet
+
+app = typer.Typer(help="GPTrader Phase-1 local runner")
+
+BASE = Path(file).resolve().parents[2]
+
+@app.command("ingest-sample")
+def ingest_sample(seed: int = typer.Option(42), bars: int = typer.Option(200), symbols: List[str] = typer.Option(["AAPL","MSFT"])):
+random.seed(seed)
+bus = LocalBus(BASE, partitions=4)
+start = datetime.now(timezone.utc) - timedelta(minutes=bars)
+for p in range(4):
+f = BASE / "data/journal" / "quotes.v1" / f"partition-{p}.ndjson"
+f.parent.mkdir(parents=True, exist_ok=True); f.unlink(missing_ok=True)
+for i in range(bars):
+ts = (start + timedelta(minutes=i)).isoformat()
+for sym in symbols:
+price = round(100 + 2random.random() + 0.5random.uniform(-1,1) + (i/200.0), 2)
+vol = random.randint(100, 5000)
+ev = QuoteV1(symbol=sym, ts=ts, price=price, volume=vol, partition_key=sym)
+bus.publish(ev.topic, key=sym, payload=ev.model_dump())
+nfile = BASE / "data/journal" / "news.v1" / "partition-0.ndjson"
+nfile.parent.mkdir(parents=True, exist_ok=True); nfile.unlink(missing_ok=True)
+headlines = [
+"Apple raises guidance after strong demand",
+"Microsoft beats earnings expectations",
+"Apple product surge delights consumers",
+"Microsoft faces downgrade concerns",
+"Neutral industry outlook persists"
+]
+with open(nfile, "w") as w:
+for i, h in enumerate(headlines):
+for sym in symbols:
+ts = (start + timedelta(minutes=i)).isoformat()
+nv = NewsV1(symbol=sym, ts=ts, headline=h, url=None, partition_key=sym)
+w.write(json.dumps(nv.model_dump())+"\n")
+q0 = BASE / "data/journal" / "quotes.v1" / "partition-0.ndjson"
+if q0.exists():
+materialize_ndjson_to_parquet(q0, BASE / "data/samples/quotes-part0.parquet")
+typer.echo("✅ Sample ingestion complete.")
+
+@app.command("build-index")
+def build_index():
+idx = LocalHybridIndex(BASE / "data/indices/news")
+idx.load()
+nfile = BASE / "data/journal" / "news.v1" / "partition-0.ndjson"
+if not nfile.exists():
+typer.echo("No news found. Run ingest-sample first."); raise typer.Exit(1)
+for i, line in enumerate(open(nfile)):
+obj = json.loads(line)
+doc = Doc(id=f"{obj['symbol']}-{i}", text=obj["headline"], meta={"symbol": obj["symbol"], "ts": obj["ts"]})
+idx.add(doc)
+idx.persist()
+typer.echo("✅ News index built.")
+
+@app.command("run-backtest")
+def run_backtest(run_id: str = typer.Option("demo"), seed: int = typer.Option(42), bars: int = typer.Option(200), symbol: str = typer.Option("AAPL")):
+cfg = RunConfig(run_id=run_id, seed=seed, bars=bars, symbol=symbol)
+runner = BacktestRunner(BASE, cfg)
+summary = runner.run()
+typer.echo(json.dumps(summary, indent=2))
+runner.close()
+typer.echo(f"✅ Artifacts written to artifacts/run-{run_id}")
+
+if name == "main":
+app()
+PY
+
+Tests
+
+cat > tests/test_eventbus.py <<'PY'
+from pathlib import Path
+from gptrader.core.eventbus import LocalBus
+
+def test_publish_subscribe(tmp_path: Path):
+bus = LocalBus(tmp_path, partitions=2)
+payload = {"topic":"quotes.v1","symbol":"AAPL","ts":"2020-01-01T00:00:00Z","price":123.45,"volume":100}
+env = bus.publish("quotes.v1", key="AAPL", payload=payload)
+it = list(bus.subscribe(group="g1", topic="quotes.v1"))
+assert len(it) == 1
+assert it[0].payload["symbol"] == "AAPL"
+bus.commit("g1", it[0])
+it2 = list(bus.subscribe(group="g1", topic="quotes.v1"))
+assert len(it2) == 0
+PY
+
+cat > tests/test_sma_risk.py <<'PY'
+from gptrader.agents.tech_agent import sma
+from gptrader.agents.risk_agent import RiskAgent
+
+def test_sma():
+assert sma([1,2,3,4,5], 5) == 3.0
+assert sma([1,2,3,4], 5) is None
+
+def test_risk_caps():
+r = RiskAgent(max_qty=2, max_notional=100)
+prop = {"action":"order","order":{"symbol":"AAPL","side":"buy","qty":3}}
+assert r.step("AAPL", prop, last_price=10.0)["approved"] is False
+assert r.step("AAPL", {"action":"order","order":{"symbol":"AAPL","side":"buy","qty":1}}, last_price=200.0)["approved"] is False
+PY
+
+cat > tests/test_backtest_smoke.py <<'PY'
+from pathlib import Path
+from gptrader.cli import ingest_sample, build_index, run_backtest
+def test_smoke(tmp_path: Path, monkeypatch):
+import gptrader.cli as cli
+cli.BASE = tmp_path
+ingest_sample.callback = None
+build_index.callback = None
+run_backtest.callback = None
+ingest_sample(seed=7, bars=30, symbols=["AAPL"])
+build_index()
+run_backtest(run_id="t1", seed=7, bars=30, symbol="AAPL")
+assert (tmp_path / "artifacts/run-t1/summary.json").exists()
+PY
+
+echo "✅ Wrote fixed files."
+FIX
+

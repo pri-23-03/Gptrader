@@ -1,0 +1,50 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "gptrader"
+version = "0.1.0"
+requires-python = ">=3.11"
+dependencies = [
+  "typer>=0.12,<0.21",
+  "pydantic>=2",
+  "duckdb>=1.1.0",
+  "pandas>=2.2",
+  "numpy>=1.26",
+  "rich>=13.7",
+]
+
+# Optional: install dev tools with `pip install -e .[dev]`
+[project.optional-dependencies]
+dev = ["pytest", "pytest-cov", "black", "isort", "ruff", "mypy"]
+
+[tool.setuptools.packages.find]
+where = ["src"]  # install only the gptrader package from src/
+
+[tool.black]
+line-length = 100
+
+[tool.isort]
+profile = "black"
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP"]
+
+[tool.pytest.ini_options]
+# Run all tests, show coverage, don't stop at first failure
+addopts = "-q --disable-warnings --maxfail=0 --cov=gptrader --cov-report=term-missing --cov-fail-under=90"
+pythonpath = ["src"]
+
+[tool.mypy]
+python_version = "3.11"
+ignore_missing_imports = true
+strict_optional = true
+warn_unused_ignores = true
+warn_redundant_casts = true
+warn_unused_configs = true
+disallow_untyped_defs = true
