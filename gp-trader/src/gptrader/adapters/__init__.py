@@ -6,10 +6,10 @@ from .index import Index, LocalIndex
 __all__ = [
     "EventBus",
     "LocalEventBus",
-    "Index",
-    "LocalIndex",
     "Executor",
     "NoopExecutor",
+    "Index",
+    "LocalIndex",
     "make_bus",
     "make_index",
     "make_executor",

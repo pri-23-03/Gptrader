@@ -1,20 +1,19 @@
 from __future__ import annotations
 
-from .eventbus import EventBus, LocalEventBus
-from .exec import Executor, NoopExecutor
-from .index import Index, LocalIndex
+from gptrader.config import settings
+
+from .eventbus import LocalEventBus
+from .exec import NoopExecutor  # <- use existing executor class
+from .index import LocalIndex
 
 
-def make_bus() -> EventBus:
-    # later: branch on settings.BUS_BACKEND
-    return LocalEventBus()
+def make_bus():
+    return LocalEventBus(base=settings.data_dir)
 
 
-def make_index() -> Index:
-    # later: branch on settings.INDEX_BACKEND
+def make_index():
     return LocalIndex()
 
 
-def make_executor() -> Executor:
-    # later: branch on settings.EXEC_BACKEND
+def make_executor():
     return NoopExecutor()

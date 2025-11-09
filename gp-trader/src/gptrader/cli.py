@@ -214,9 +214,6 @@ class _TyperClickAdapter:
 # Export an object that works for both Typer and Click
 app: Any = _TyperClickAdapter(typer_app)
 
-if __name__ == "__main__":
-    app()
-
 
 @app.command("diag")
 def diag() -> None:
@@ -229,6 +226,14 @@ def diag() -> None:
     i = make_index().__class__.__name__
     e = make_executor().__class__.__name__
     typer.echo("Backends:")
-    typer.echo(f"  BUS_BACKEND={settings.BUS_BACKEND} -> {b}")
-    typer.echo(f"  INDEX_BACKEND={settings.INDEX_BACKEND} -> {i}")
-    typer.echo(f"  EXEC_BACKEND={settings.EXEC_BACKEND} -> {e}")
+    typer.echo(f"  BUS_BACKEND={settings.bus_backend} -> {b}")
+    typer.echo(f"  INDEX_BACKEND={settings.index_backend} -> {i}")
+    typer.echo(f"  EXEC_BACKEND={settings.exec_backend} -> {e}")
+
+
+if __name__ == "__main__":
+    app()
+
+
+if __name__ == "__main__":
+    app()
