@@ -1,11 +1,23 @@
 name: CI
-on: [push, pull_request]
+on:
+  push:
+  pull_request:
 jobs:
   test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
-        with: { python-version: "3.11" }
-      - run: python -m venv .venv && source .venv/bin/activate && pip install -U pip && pip install -e .[dev]
-      - run: source .venv/bin/activate && make all
+        with:
+          python-version: '3.11'
+      - name: Install
+        run: |
+          python -m venv .venv
+          source .venv/bin/activate
+          pip install -U pip
+          pip install -e .
+          pip install pytest pytest-cov black isort ruff mypy
+      - name: Lint + Type + Test
+        run: |
+          source .venv/bin/activate
+          make all
