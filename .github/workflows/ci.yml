@@ -1,24 +1,18 @@
 # .github/workflows/ci.yml
-name: CI
-on:
-  push:
-  pull_request:
-  workflow_dispatch:
-
-permissions:
-  contents: read
-
 jobs:
   test:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: gp-trader   # <— key line
+    defaults: { run: { working-directory: gp-trader } }
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
+        with: { python-version: '3.11' }
+      - name: Cache pip
+        uses: actions/cache@v4
         with:
-          python-version: '3.11'
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('gp-trader/pyproject.toml') }}
+          restore-keys: ${{ runner.os }}-pip-
       - name: Install + Lint + Type + Test
         run: |
           python -m venv .venv
