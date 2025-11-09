@@ -2,42 +2,48 @@ from __future__ import annotations
 
 from collections.abc import Iterable, Mapping
 from types import SimpleNamespace
-from typing import Any
+from typing import Any, Protocol, runtime_checkable
 
 
-class Index:
-    def upsert(self, docs: Iterable[Mapping]) -> None:  # interface
-        raise NotImplementedError
-
-    def search(self, query: str, k: int = 5) -> Any:
-        raise NotImplementedError
+@runtime_checkable
+class Index(Protocol):
+    def upsert(self, docs: Iterable[Mapping[str, Any]]) -> None: ...
+    def search(self, query: str, k: int = 5) -> list[Any]: ...
 
 
-class LocalIndex(Index):
+class LocalIndex:
+    """Thin adapter over the Phase-1 LocalHybridIndex."""
+
     def __init__(self) -> None:
         from gptrader.config import settings
-        from gptrader.vectorstore import LocalHybridIndex  # lazy import
+        from gptrader.vectorstore import LocalHybridIndex  # lazy to avoid cycles
 
-        # Phase-1 LocalHybridIndex requires a base path
-        self._idx = LocalHybridIndex(base=settings.data_dir)
+        self._idx: Any = LocalHybridIndex(base=settings.data_dir)
 
-    def upsert(self, docs: Iterable[Mapping]) -> None:
+    def upsert(self, docs: Iterable[Mapping[str, Any]]) -> None:
         docs_list = list(docs)
 
-        # Prefer native batch methods if present
         if hasattr(self._idx, "upsert"):
-            return self._idx.upsert(docs_list)  # type: ignore[attr-defined]
+            self._idx.upsert(docs_list)
+            return
         if hasattr(self._idx, "index"):
-            return self._idx.index(docs_list)  # type: ignore[attr-defined]
+            self._idx.index(docs_list)
+            return
 
-        # Fallback: single-doc API (expects attributes like `.text`)
         if hasattr(self._idx, "add"):
             for d in docs_list:
-                obj = SimpleNamespace(**d) if isinstance(d, Mapping) else d
-                self._idx.add(obj)  # type: ignore[attr-defined]
-            return None
+                obj: Any = SimpleNamespace(**d) if isinstance(d, Mapping) else d
+                self._idx.add(obj)
+            return
 
-        raise AttributeError("Underlying index has no upsert/index/add")
+    def search(self, query: str, k: int = 5) -> list[Any]:
+        if hasattr(self._idx, "search"):
+            res = self._idx.search(query, k)
+            return list(res) if not isinstance(res, list) else res
+        if hasattr(self._idx, "query"):
+            res = self._idx.query(query, top_k=k)
+            return list(res) if not isinstance(res, list) else res
+        return []
 
-    def search(self, query: str, k: int = 5):
-        return self._idx.search(query, k)  # type: ignore[attr-defined]
+
+__all__ = ["Index", "LocalIndex"]

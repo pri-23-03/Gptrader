@@ -8,9 +8,9 @@ __all__ = [
     "LocalEventBus",
     "Executor",
     "NoopExecutor",
+    "make_bus",
+    "make_executor",
+    "make_index",
     "Index",
     "LocalIndex",
-    "make_bus",
-    "make_index",
-    "make_executor",
 ]

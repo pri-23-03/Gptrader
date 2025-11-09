@@ -1,19 +1,18 @@
 from __future__ import annotations
 
-from gptrader.config import settings
-
-from .eventbus import LocalEventBus
-from .exec import NoopExecutor  # <- use existing executor class
-from .index import LocalIndex
+from .eventbus import EventBus, LocalEventBus
+from .exec import Executor, NoopExecutor
+from .index import Index, LocalIndex
 
 
-def make_bus():
-    return LocalEventBus(base=settings.data_dir)
+# In phase 2 you'll branch on settings to select cloud adapters.
+def make_bus() -> EventBus:
+    return LocalEventBus()
 
 
-def make_index():
+def make_index() -> Index:
     return LocalIndex()
 
 
-def make_executor():
+def make_executor() -> Executor:
     return NoopExecutor()

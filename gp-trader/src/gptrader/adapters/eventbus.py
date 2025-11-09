@@ -1,33 +1,29 @@
 from __future__ import annotations
 
-from collections.abc import Iterable
-from pathlib import Path
-
-from gptrader.config import settings
+from collections.abc import Iterable, Mapping
+from typing import Any, Protocol
 
 
-class EventBus:  # minimal interface; expand as needed
-    def publish(self, topic: str, events: Iterable[dict]) -> None:  # pragma: no cover
-        raise NotImplementedError
+class EventBus(Protocol):
+    def publish(self, topic: str, events: Iterable[Mapping[str, Any]]) -> None: ...
 
-    def subscribe(self, topic: str):  # pragma: no cover
-        raise NotImplementedError
+    # optional streaming API for future backends
+    # def subscribe(self, topic: str) -> Iterable[Mapping[str, Any]]: ...
 
 
-class LocalEventBus(EventBus):
-    """Thin shim over the phase-1 LocalBus, but sourcing paths from settings."""
+class LocalEventBus:
+    """
+    Very thin shim around the phase-1 LocalBus; adapts the call-shape.
+    """
 
-    def __init__(self, base: Path | None = None) -> None:
-        from gptrader.bus import LocalBus  # lazy import to avoid cycles
+    def __init__(self) -> None:
+        from gptrader.bus import LocalBus  # lazy import
+        from gptrader.config import settings
 
-        self._b = LocalBus(base=base or settings.data_dir)
+        self._b = LocalBus(base=settings.data_dir)
 
-    def publish(self, topic: str, events: Iterable[dict]) -> None:
-        events_list = list(events)
-        if not events_list:
-            return
-        key = events_list[0].get("partition_key") or events_list[0].get("symbol") or "default"
-        self._b.publish(topic=topic, key=key, payload=events_list)
-
-    def subscribe(self, topic: str):
-        yield from self._b.subscribe(topic)
+    def publish(self, topic: str, events: Iterable[Mapping[str, Any]]) -> None:
+        # LocalBus.publish(topic, key, payload: dict)
+        # wrap the iterable in a dict payload to satisfy its signature
+        payload: dict[str, Any] = {"events": list(events)}
+        self._b.publish(topic=topic, key="default", payload=payload)
