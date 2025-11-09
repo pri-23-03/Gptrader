@@ -1,0 +1,492 @@
+=== SYSTEM / PYTHON ===
+Darwin Priyanshus-MacBook-Pro-228.local 24.6.0 Darwin Kernel Version 24.6.0: Mon Jul 14 11:30:40 PDT 2025; root:xnu-11417.140.69~1/RELEASE_ARM64_T8132 arm64
+Python 3.11.14
+pip 25.3 from /Users/priyanshurathee/Gptrader/gp-trader/.venv/lib/python3.11/site-packages/pip (python 3.11)
+/Users/priyanshurathee/Gptrader/gp-trader/.venv/bin/python3
+=== GIT STATUS ===
+true
+HEAD: 06c8fa3
+## main...origin/main
+?? repo_diagnose.txt
+?? src/gptrader/__pycache__/__init__.cpython-312.pyc
+* main 06c8fa3281f7f9fbcbeb7463839446aed86aac1e [origin/main] Add .gitignore for env/runtime/data/artifacts
+06c8fa3 (HEAD -> main, origin/main) Add .gitignore for env/runtime/data/artifacts
+a63aec4 Add CI workflow
+8c1c5d9 Phase 1: local bus, vector index, CLI, tests (green)
+7c6ee59 Phase-1 complete: CLI, bus, storage+index, tests & coverage
+9afaa58 (tag: v0.1.0-phase1) Add CI workflow
+8cc571f Phase-1 complete: CLI, bus, storage+index, tests & coverage
+=== GIT STATUS ===
+true
+HEAD: 06c8fa3
+## main...origin/main
+?? repo_diagnose.txt
+?? src/gptrader/__pycache__/__init__.cpython-312.pyc
+* main 06c8fa3281f7f9fbcbeb7463839446aed86aac1e [origin/main] Add .gitignore for env/runtime/data/artifacts
+06c8fa3 (HEAD -> main, origin/main) Add .gitignore for env/runtime/data/artifacts
+a63aec4 Add CI workflow
+8c1c5d9 Phase 1: local bus, vector index, CLI, tests (green)
+7c6ee59 Phase-1 complete: CLI, bus, storage+index, tests & coverage
+9afaa58 (tag: v0.1.0-phase1) Add CI workflow
+8cc571f Phase-1 complete: CLI, bus, storage+index, tests & coverage
+=== TREE (≤3 levels) ===
+.
+./artifacts
+./artifacts/run-demo
+./artifacts/run-demo/summary.json
+./artifacts/run-demo/pnl.csv
+./.DS_Store
+./gptrader.egg-info
+./gptrader.egg-info/PKG-INFO
+./gptrader.egg-info/SOURCES.txt
+./gptrader.egg-info/requires.txt
+./gptrader.egg-info/top_level.txt
+./gptrader.egg-info/dependency_links.txt
+./.pytest_cache
+./.coverage
+./Makefile
+./.ruff_cache
+./.ruff_cache/CACHEDIR.TAG
+./.ruff_cache/0.14.4
+./.ruff_cache/0.14.4/8235139023551857317
+./.ruff_cache/0.14.4/15519892169992919241
+./.ruff_cache/0.14.4/1966146096885478677
+./.ruff_cache/.gitignore
+./pyproject.toml
+./tests
+./tests/__pycache__
+./tests/test_bus_and_e2e.py
+./tests/test_sanity.py
+./tests/test_schemas_and_cli.py
+./tests/test_storage_and_index.py
+./.runtime
+./.runtime/metrics
+./.runtime/logs
+./.runtime/offsets
+./README.md
+./repo_diagnose.txt
+./.mypy_cache
+./.mypy_cache/3.11
+./.mypy_cache/3.11/datetime.data.json
+./.mypy_cache/3.11/socket.meta.json
+./.mypy_cache/3.11/ssl.data.json
+./.mypy_cache/3.11/configparser.data.json
+./.mypy_cache/3.11/mdurl
+./.mypy_cache/3.11/_pickle.data.json
+./.mypy_cache/3.11/platform.meta.json
+./.mypy_cache/3.11/difflib.meta.json
+./.mypy_cache/3.11/pty.data.json
+./.mypy_cache/3.11/builtins.meta.json
+./.mypy_cache/3.11/zlib.meta.json
+./.mypy_cache/3.11/zoneinfo
+./.mypy_cache/3.11/ctypes
+./.mypy_cache/3.11/contextvars.data.json
+./.mypy_cache/3.11/time.data.json
+./.mypy_cache/3.11/decimal.data.json
+./.mypy_cache/3.11/unittest
+./.mypy_cache/3.11/opcode.meta.json
+./.mypy_cache/3.11/genericpath.meta.json
+./.mypy_cache/3.11/_weakrefset.data.json
+./.mypy_cache/3.11/shlex.meta.json
+./.mypy_cache/3.11/hashlib.meta.json
+./.mypy_cache/3.11/tarfile.data.json
+./.mypy_cache/3.11/_blake2.meta.json
+./.mypy_cache/3.11/fractions.data.json
+./.mypy_cache/3.11/textwrap.data.json
+./.mypy_cache/3.11/_ssl.meta.json
+./.mypy_cache/3.11/enum.meta.json
+./.mypy_cache/3.11/mmap.data.json
+./.mypy_cache/3.11/_ctypes.meta.json
+./.mypy_cache/3.11/abc.meta.json
+./.mypy_cache/3.11/traceback.meta.json
+./.mypy_cache/3.11/random.data.json
+./.mypy_cache/3.11/subprocess.meta.json
+./.mypy_cache/3.11/itertools.meta.json
+./.mypy_cache/3.11/dataclasses.data.json
+./.mypy_cache/3.11/annotated_types
+./.mypy_cache/3.11/typing.data.json
+./.mypy_cache/3.11/attrs
+./.mypy_cache/3.11/_decimal.data.json
+./.mypy_cache/3.11/_hashlib.meta.json
+./.mypy_cache/3.11/base64.meta.json
+./.mypy_cache/3.11/queue.meta.json
+./.mypy_cache/3.11/_sitebuiltins.meta.json
+./.mypy_cache/3.11/dis.meta.json
+./.mypy_cache/3.11/resource.data.json
+./.mypy_cache/3.11/typer
+./.mypy_cache/3.11/_codecs.meta.json
+./.mypy_cache/3.11/posixpath.data.json
+./.mypy_cache/3.11/gettext.meta.json
+./.mypy_cache/3.11/errno.meta.json
+./.mypy_cache/3.11/argparse.data.json
+./.mypy_cache/3.11/contextlib.meta.json
+./.mypy_cache/3.11/shutil.meta.json
+./.mypy_cache/3.11/pathlib
+./.mypy_cache/3.11/zipimport.data.json
+./.mypy_cache/3.11/termios.data.json
+./.mypy_cache/3.11/_codecs.data.json
+./.mypy_cache/3.11/gettext.data.json
+./.mypy_cache/3.11/posixpath.meta.json
+./.mypy_cache/3.11/contextlib.data.json
+./.mypy_cache/3.11/shutil.data.json
+./.mypy_cache/3.11/argparse.meta.json
+./.mypy_cache/3.11/errno.data.json
+./.mypy_cache/3.11/termios.meta.json
+./.mypy_cache/3.11/zipimport.meta.json
+./.mypy_cache/3.11/_sitebuiltins.data.json
+./.mypy_cache/3.11/resource.meta.json
+./.mypy_cache/3.11/dis.data.json
+./.mypy_cache/3.11/multiprocessing
+./.mypy_cache/3.11/typing.meta.json
+./.mypy_cache/3.11/_decimal.meta.json
+./.mypy_cache/3.11/_typeshed
+./.mypy_cache/3.11/queue.data.json
+./.mypy_cache/3.11/_hashlib.data.json
+./.mypy_cache/3.11/base64.data.json
+./.mypy_cache/3.11/urllib
+./.mypy_cache/3.11/abc.data.json
+./.mypy_cache/3.11/markdown_it
+./.mypy_cache/3.11/itertools.data.json
+./.mypy_cache/3.11/subprocess.data.json
+./.mypy_cache/3.11/traceback.data.json
+./.mypy_cache/3.11/random.meta.json
+./.mypy_cache/3.11/zipfile
+./.mypy_cache/3.11/dataclasses.meta.json
+./.mypy_cache/3.11/opcode.data.json
+./.mypy_cache/3.11/genericpath.data.json
+./.mypy_cache/3.11/decimal.meta.json
+./.mypy_cache/3.11/hashlib.data.json
+./.mypy_cache/3.11/shlex.data.json
+./.mypy_cache/3.11/tarfile.meta.json
+./.mypy_cache/3.11/_weakrefset.meta.json
+./.mypy_cache/3.11/enum.data.json
+./.mypy_cache/3.11/_ssl.data.json
+./.mypy_cache/3.11/_blake2.data.json
+./.mypy_cache/3.11/textwrap.meta.json
+./.mypy_cache/3.11/fractions.meta.json
+./.mypy_cache/3.11/_ctypes.data.json
+./.mypy_cache/3.11/click
+./.mypy_cache/3.11/mmap.meta.json
+./.mypy_cache/3.11/zlib.data.json
+./.mypy_cache/3.11/builtins.data.json
+./.mypy_cache/3.11/contextvars.meta.json
+./.mypy_cache/3.11/time.meta.json
+./.mypy_cache/3.11/@plugins_snapshot.json
+./.mypy_cache/3.11/html
+./.mypy_cache/3.11/_duckdb
+./.mypy_cache/3.11/_pickle.meta.json
+./.mypy_cache/3.11/platform.data.json
+./.mypy_cache/3.11/pty.meta.json
+./.mypy_cache/3.11/difflib.data.json
+./.mypy_cache/3.11/datetime.meta.json
+./.mypy_cache/3.11/numpy
+./.mypy_cache/3.11/socket.data.json
+./.mypy_cache/3.11/ssl.meta.json
+./.mypy_cache/3.11/configparser.meta.json
+./.mypy_cache/3.11/pprint.meta.json
+./.mypy_cache/3.11/sre_compile.meta.json
+./.mypy_cache/3.11/colorsys.meta.json
+./.mypy_cache/3.11/_contextvars.meta.json
+./.mypy_cache/3.11/selectors.meta.json
+./.mypy_cache/3.11/tty.data.json
+./.mypy_cache/3.11/io.data.json
+./.mypy_cache/3.11/codecs.data.json
+./.mypy_cache/3.11/warnings.meta.json
+./.mypy_cache/3.11/typing_extensions.meta.json
+./.mypy_cache/3.11/_warnings.meta.json
+./.mypy_cache/3.11/ast.data.json
+./.mypy_cache/3.11/linecache.meta.json
+./.mypy_cache/3.11/threading.data.json
+./.mypy_cache/3.11/copy.data.json
+./.mypy_cache/3.11/functools.data.json
+./.mypy_cache/3.11/_bz2.data.json
+./.mypy_cache/3.11/unicodedata.data.json
+./.mypy_cache/3.11/_ast.meta.json
+./.mypy_cache/3.11/weakref.data.json
+./.mypy_cache/3.11/reprlib.meta.json
+./.mypy_cache/3.11/sre_parse.meta.json
+./.mypy_cache/3.11/sys
+./.mypy_cache/3.11/keyword.data.json
+./.mypy_cache/3.11/_collections_abc.meta.json
+./.mypy_cache/3.11/json
+./.mypy_cache/3.11/bz2.meta.json
+./.mypy_cache/3.11/attr
+./.mypy_cache/3.11/_queue.meta.json
+./.mypy_cache/3.11/math.meta.json
+./.mypy_cache/3.11/__future__.meta.json
+./.mypy_cache/3.11/tempfile.meta.json
+./.mypy_cache/3.11/pydoc.meta.json
+./.mypy_cache/3.11/gzip.meta.json
+./.mypy_cache/3.11/uuid.data.json
+./.mypy_cache/3.11/_random.meta.json
+./.mypy_cache/3.11/packages.data.json
+./.mypy_cache/3.11/signal.meta.json
+./.mypy_cache/3.11/gptrader
+./.mypy_cache/3.11/getpass.data.json
+./.mypy_cache/3.11/_weakref.data.json
+./.mypy_cache/3.11/sre_constants.meta.json
+./.mypy_cache/3.11/_io.meta.json
+./.mypy_cache/3.11/concurrent
+./.mypy_cache/3.11/_stat.meta.json
+./.mypy_cache/3.11/_asyncio.meta.json
+./.mypy_cache/3.11/packages
+./.mypy_cache/3.11/array.meta.json
+./.mypy_cache/3.11/_thread.data.json
+./.mypy_cache/3.11/pickle.meta.json
+./.mypy_cache/3.11/inspect.data.json
+./.mypy_cache/3.11/_compression.meta.json
+./.mypy_cache/3.11/_operator.data.json
+./.mypy_cache/3.11/operator.data.json
+./.mypy_cache/3.11/rich
+./.mypy_cache/3.11/types.data.json
+./.mypy_cache/3.11/_socket.data.json
+./.mypy_cache/3.11/stat.meta.json
+./.mypy_cache/3.11/_frozen_importlib_external.meta.json
+./.mypy_cache/3.11/copyreg.data.json
+./.mypy_cache/3.11/_frozen_importlib.meta.json
+./.mypy_cache/3.11/numbers.data.json
+./.mypy_cache/3.11/duckdb
+./.mypy_cache/3.11/re.meta.json
+./.mypy_cache/3.11/ipaddress.data.json
+./.mypy_cache/3.11/_socket.meta.json
+./.mypy_cache/3.11/os
+./.mypy_cache/3.11/copyreg.meta.json
+./.mypy_cache/3.11/_frozen_importlib.data.json
+./.mypy_cache/3.11/_frozen_importlib_external.data.json
+./.mypy_cache/3.11/stat.data.json
+./.mypy_cache/3.11/numbers.meta.json
+./.mypy_cache/3.11/re.data.json
+./.mypy_cache/3.11/ipaddress.meta.json
+./.mypy_cache/3.11/string
+./.mypy_cache/3.11/_compression.data.json
+./.mypy_cache/3.11/inspect.meta.json
+./.mypy_cache/3.11/pickle.data.json
+./.mypy_cache/3.11/operator.meta.json
+./.mypy_cache/3.11/_operator.meta.json
+./.mypy_cache/3.11/types.meta.json
+./.mypy_cache/3.11/_io.data.json
+./.mypy_cache/3.11/_stat.data.json
+./.mypy_cache/3.11/_asyncio.data.json
+./.mypy_cache/3.11/importlib
+./.mypy_cache/3.11/_thread.meta.json
+./.mypy_cache/3.11/array.data.json
+./.mypy_cache/3.11/getpass.meta.json
+./.mypy_cache/3.11/signal.data.json
+./.mypy_cache/3.11/packages.meta.json
+./.mypy_cache/3.11/pydantic
+./.mypy_cache/3.11/_weakref.meta.json
+./.mypy_cache/3.11/sre_constants.data.json
+./.mypy_cache/3.11/collections
+./.mypy_cache/3.11/_queue.data.json
+./.mypy_cache/3.11/typing_inspection
+./.mypy_cache/3.11/math.data.json
+./.mypy_cache/3.11/__future__.data.json
+./.mypy_cache/3.11/_random.data.json
+./.mypy_cache/3.11/uuid.meta.json
+./.mypy_cache/3.11/tempfile.data.json
+./.mypy_cache/3.11/pydoc.data.json
+./.mypy_cache/3.11/gzip.data.json
+./.mypy_cache/3.11/reprlib.data.json
+./.mypy_cache/3.11/weakref.meta.json
+./.mypy_cache/3.11/asyncio
+./.mypy_cache/3.11/unicodedata.meta.json
+./.mypy_cache/3.11/_ast.data.json
+./.mypy_cache/3.11/keyword.meta.json
+./.mypy_cache/3.11/_collections_abc.data.json
+./.mypy_cache/3.11/logging
+./.mypy_cache/3.11/sre_parse.data.json
+./.mypy_cache/3.11/bz2.data.json
+./.mypy_cache/3.11/email
+./.mypy_cache/3.11/ast.meta.json
+./.mypy_cache/3.11/pydantic_core
+./.mypy_cache/3.11/threading.meta.json
+./.mypy_cache/3.11/linecache.data.json
+./.mypy_cache/3.11/copy.meta.json
+./.mypy_cache/3.11/_bz2.meta.json
+./.mypy_cache/3.11/functools.meta.json
+./.mypy_cache/3.11/selectors.data.json
+./.mypy_cache/3.11/pprint.data.json
+./.mypy_cache/3.11/colorsys.data.json
+./.mypy_cache/3.11/sre_compile.data.json
+./.mypy_cache/3.11/_contextvars.data.json
+./.mypy_cache/3.11/io.meta.json
+./.mypy_cache/3.11/tty.meta.json
+./.mypy_cache/3.11/codecs.meta.json
+./.mypy_cache/3.11/typing_extensions.data.json
+./.mypy_cache/3.11/_warnings.data.json
+./.mypy_cache/3.11/warnings.data.json
+./.mypy_cache/CACHEDIR.TAG
+./.mypy_cache/.gitignore
+./.gitignore
+./.venv
+./packages
+./packages/__init__.py
+./packages/schemas
+./packages/schemas/events.py
+./packages/schemas/__init__.py
+./.github
+./.github/workflows
+./.github/workflows/ci.yml
+./data
+./data/journal
+./data/journal/quotes.v1
+./data/journal/news.v1
+./data/indices
+./data/indices/news
+./data/samples
+./data/samples/quotes-part0.parquet
+./src
+./src/gptrader.egg-info
+./src/gptrader.egg-info/PKG-INFO
+./src/gptrader.egg-info/SOURCES.txt
+./src/gptrader.egg-info/requires.txt
+./src/gptrader.egg-info/top_level.txt
+./src/gptrader.egg-info/dependency_links.txt
+./src/gptrader
+./src/gptrader/vectorstore.py
+./src/gptrader/__init__.py
+./src/gptrader/__pycache__
+./src/gptrader/_schemas.py
+./src/gptrader/bus.py
+./src/gptrader/cli.py
+./src/gptrader/storage.py
+=== pyproject.toml (first 160 lines) ===
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "gptrader"
+version = "0.1.0"
+requires-python = ">=3.11"
+dependencies = [
+  "typer>=0.12,<0.21",
+  "pydantic>=2",
+  "duckdb>=1.1.0",
+  "pandas>=2.2",
+  "numpy>=1.26",
+  "rich>=13.7",
+]
+
+# Optional: install dev tools with `pip install -e .[dev]`
+[project.optional-dependencies]
+dev = ["pytest", "pytest-cov", "black", "isort", "ruff", "mypy"]
+
+[tool.setuptools.packages.find]
+where = ["src"]  # install only the gptrader package from src/
+
+[tool.black]
+line-length = 100
+
+[tool.isort]
+profile = "black"
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP"]
+
+[tool.pytest.ini_options]
+# Run all tests, show coverage, don't stop at first failure
+addopts = "-q --disable-warnings --maxfail=0 --cov=gptrader --cov-report=term-missing --cov-fail-under=90"
+pythonpath = ["src"]
+
+[tool.mypy]
+python_version = "3.11"
+ignore_missing_imports = true
+strict_optional = true
+warn_unused_ignores = true
+warn_redundant_casts = true
+warn_unused_configs = true
+disallow_untyped_defs = true=== Makefile (first 120 lines) ===
+.PHONY: venv install fmt lint type test all run clean
+
+venv:
+	python3.11 -m venv .venv || python3 -m venv .venv
+
+install:
+	. .venv/bin/activate && pip install -U pip && pip install -e . && pip install pytest pytest-cov black isort ruff mypy
+
+fmt:
+	. .venv/bin/activate && black src tests && isort src tests
+
+lint:
+	. .venv/bin/activate && ruff check src tests
+
+type:
+	. .venv/bin/activate && mypy src
+
+test:
+	. .venv/bin/activate && pytest
+
+all: fmt lint type test
+
+run:
+	. .venv/bin/activate && python -m gptrader.cli --help
+
+clean:
+	rm -rf .venv .pytest_cache .mypy_cache .ruff_cache artifacts/*.tmp=== CI (if present) ===
+name: CI
+on:
+  push:
+  pull_request:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install
+        run: |
+          python -m venv .venv
+          source .venv/bin/activate
+          pip install -U pip
+          pip install -e .
+          pip install pytest pytest-cov black isort ruff mypy
+      - name: Lint + Type + Test
+        run: |
+          source .venv/bin/activate
+          make all=== PACKAGE INSTALLATION ===
+gptrader version: 0.1.0
+distribution path: .
+module file: /Users/priyanshurathee/Gptrader/gp-trader/src/gptrader/__init__.py
+=== RUFF ===
+ruff 0.14.4
+All checks passed!
+=== MYPY ===
+mypy 1.18.2 (compiled: yes)
+Success: no issues found in 6 source files
+=== PYTEST COLLECT ===
+tests/test_bus_and_e2e.py: 2
+tests/test_sanity.py: 1
+tests/test_schemas_and_cli.py: 1
+tests/test_storage_and_index.py: 2
+
+================================ tests coverage ================================
+______________ coverage: platform darwin, python 3.11.14-final-0 _______________
+
+Name                          Stmts   Miss  Cover   Missing
+-----------------------------------------------------------
+src/gptrader/__init__.py          1      0   100%
+src/gptrader/_schemas.py         42      0   100%
+src/gptrader/bus.py              67     44    34%   31-35, 38-40, 43-45, 48-49, 52-60, 65-84, 87-88, 91-95
+src/gptrader/cli.py             129     93    28%   31, 37-38, 51-95, 104-121, 128-130, 141-189, 205-208, 211, 218
+src/gptrader/storage.py          22     15    32%   12-25, 29-33
+src/gptrader/vectorstore.py      62     41    34%   14-21, 25, 29-33, 47-52, 55-56, 59-62, 65-73, 76-82
+-----------------------------------------------------------
+TOTAL                           323    193    40%
+FAIL Required test coverage of 90% not reached. Total coverage: 40.25%
+=== DATA ARTIFACTS ===
+[ok] data/journal/quotes.v1/partition-0.ndjson
+{"v": 1, "topic": "quotes.v1", "symbol": "AAPL", "ts": "2025-11-09T00:57:38.206750+00:00", "price": 100.06, "volume": 1002, "source": "synthetic", "partition_key": "AAPL"}
+{"v": 1, "topic": "quotes.v1", "symbol": "MSFT", "ts": "2025-11-09T00:57:38.206750+00:00", "price": 99.91, "volume": 1022, "source": "synthetic", "partition_key": "MSFT"}
+{"v": 1, "topic": "quotes.v1", "symbol": "AAPL", "ts": "2025-11-09T00:58:38.206750+00:00", "price": 100.1, "volume": 1067, "source": "synthetic", "partition_key": "AAPL"}
+[ok] data/journal/news.v1/partition-0.ndjson
+{"v": 1, "topic": "news.v1", "symbol": "AAPL", "ts": "2025-11-09T00:57:38.206750+00:00", "headline": "Apple raises guidance after strong demand", "url": null, "sentiment_hint": null, "partition_key": "AAPL"}
+{"v": 1, "topic": "news.v1", "symbol": "MSFT", "ts": "2025-11-09T00:57:38.206750+00:00", "headline": "Apple raises guidance after strong demand", "url": null, "sentiment_hint": null, "partition_key": "MSFT"}
+{"v": 1, "topic": "news.v1", "symbol": "AAPL", "ts": "2025-11-09T00:58:38.206750+00:00", "headline": "Microsoft beats earnings expectations", "url": null, "sentiment_hint": null, "partition_key": "AAPL"}
+[ok] data/samples/quotes-part0.parquet
