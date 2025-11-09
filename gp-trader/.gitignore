@@ -18,4 +18,17 @@ data/
 artifacts/
 
 # macOS
+.DS_Store# build + packaging
+dist/
+*.whl
+*.tar.gz
+*.egg-info/
+
+# tooling caches
+.coverage
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# macOS cruft
 .DS_Store
